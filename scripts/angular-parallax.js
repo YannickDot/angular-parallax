@@ -11,12 +11,14 @@ angular.module('angular-parallax', [
     },
     link: function($scope, elem, $attrs) {
      var latestKnownScrollY = 0;
+     var rafActive = false;
      var raf;
      var windowHeight = $window.innerHeight;
      var body = window.document.body;
 
      function setPosition () {
        latestKnownScrollY = $window.scrollY;
+       requestRAF();
      }
 
      function disableHover () {
@@ -27,27 +29,33 @@ angular.module('angular-parallax', [
        body.classList.remove('disable-hover');
      }
 
+     function requestRAF () {
+        if(!rafActive) {
+          raf = $window.requestAnimationFrame(update);
+        }
+        rafActive = true;
+     }
+
 
      function update () {
-       raf = $window.requestAnimationFrame(update);
+       rafActive = false;
+       var currentScroll = latestKnownScrollY;
        // horizontal positioning
        elem.css('left', $scope.parallaxHorizontalOffset + "px");
 
-       var calcValY = latestKnownScrollY * ($scope.parallaxRatio ? $scope.parallaxRatio : 1.1 );
+       var calcValY = currentScroll * ($scope.parallaxRatio ? $scope.parallaxRatio : 1.1 );
        if (calcValY <= windowHeight) {
          var topVal = (calcValY < $scope.parallaxVerticalOffset ? $scope.parallaxVerticalOffset : calcValY);
          elem.css('transform','translateY(' +topVal+ 'px)');
        }
      }
-     raf = $window.requestAnimationFrame(update);
-
-     setPosition();
 
      angular.element($window).bind("scroll", setPosition);
      angular.element($window).bind("scrollstart", disableHover);
      angular.element($window).bind("scrollstop", enableHover);
      angular.element($window).bind("touchmove", setPosition);
    }  // link function
+
   };
 }]).directive('parallaxBackground', ['$window', function($window) {
   return {
